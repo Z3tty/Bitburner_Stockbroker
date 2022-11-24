@@ -15,6 +15,7 @@ let hasBitnode = false;
 // profit.
 const infCash = false;
 let S = 100; // Default
+const STOP_LOSS = 0.90; // Oops. Bad pick. Pull the plug.
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -162,17 +163,16 @@ async function evalSell (ns, SYM) {
     let pos = getPos(SYM);
     if (ownsStock(SYM)) { // Just in case
         if (ownsLong() > 0) {
-            // If selling now makes money, then sell
+            // If selling now makes money or if we're htting the stop loss, then sell
             gain = gainLong() - pos[2];
-            if (gain > 0) {
+            if (gain > 0 || gainLong() < pos[2] * STOP_LOSS) {
                 ns.tprint("Sold " + SYM + " for $" + toPrintableNumber(Math.floor(gain + pos[2])));
-                ns.tprint("Profited $" + toPrintableNumber(gain));
+                ns.tprint(gain > 0 ? "Profited $" + toPrintableNumber(gain) : "STOP LOSS: lost $" + toPrintableNumber(gain));
                 await sellStock(ns, SYM, "long", ownsLong());
-                
             }
         } if (ownsShort() > 0) {
             gain = gainShort() - pos[2];
-            if (gain > 0) {
+            if (gain > 0 || gainShort() < pos[2] * STOP_LOSS) {
                 ns.tprint("Sold " + SYM + " for $" + toPrintableNumber(Math.floor(gain + pos[2])));
                 ns.tprint("Profited $" + toPrintableNumber(gain));
                 await sellStock(ns, SYM, "short", ownsShort());
